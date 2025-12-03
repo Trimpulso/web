@@ -11,6 +11,48 @@
     </style>
   </head>
   <body>
-    <h1>Hola mundo</h1>
+    <main>
+      <h1>Hola mundo</h1>
+      <section aria-labelledby="btc-title">
+        <h2 id="btc-title">Precio de Bitcoin (BTC)</h2>
+        <p>
+          <span id="btc-price" aria-live="polite">Cargando…</span>
+          <small id="btc-updated" style="display:block;color:#555"></small>
+        </p>
+        <button id="refresh-btn" type="button">Actualizar ahora</button>
+      </section>
+    </main>
+    <script>
+      const priceEl = document.getElementById('btc-price');
+      const updatedEl = document.getElementById('btc-updated');
+      const refreshBtn = document.getElementById('refresh-btn');
+
+      async function fetchBTC() {
+        try {
+          // CoinGecko API (sin API key)
+          const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,ars,pen,eur&include_last_updated_at=true');
+          if (!res.ok) throw new Error('Error al obtener precio');
+          const data = await res.json();
+          const btc = data.bitcoin;
+          const usd = btc.usd?.toLocaleString('es', { style: 'currency', currency: 'USD' });
+          const eur = btc.eur?.toLocaleString('es', { style: 'currency', currency: 'EUR' });
+          const ars = btc.ars?.toLocaleString('es', { style: 'currency', currency: 'ARS' });
+          const pen = btc.pen?.toLocaleString('es', { style: 'currency', currency: 'PEN' });
+          const ts = btc.last_updated_at ? new Date(btc.last_updated_at * 1000) : new Date();
+
+          priceEl.textContent = `USD ${usd} | EUR ${eur} | ARS ${ars} | PEN ${pen}`.replaceAll('undefined', 'N/D');
+          updatedEl.textContent = `Actualizado: ${ts.toLocaleString('es')}`;
+        } catch (err) {
+          priceEl.textContent = 'No se pudo obtener el precio.';
+          updatedEl.textContent = '';
+          console.error(err);
+        }
+      }
+
+      refreshBtn.addEventListener('click', fetchBTC);
+      fetchBTC();
+      // Actualiza cada minuto
+      setInterval(fetchBTC, 60_000);
+    </script>
   </body>
 </html>
